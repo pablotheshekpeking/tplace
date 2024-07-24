@@ -7,9 +7,6 @@
           "includeFiles": ["prisma/**"]
         }
       }
-    ],
-    "hooks": {
-      "build": "prisma generate && next build"
-    }
+    ]
   }
   
