@@ -7,6 +7,9 @@
           "includeFiles": ["prisma/**"]
         }
       }
-    ]
+    ],
+    "rewrites":  [
+        {"source": "/(.*)", "destination": "/"}
+      ]
   }
   
