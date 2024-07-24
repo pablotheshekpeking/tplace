@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { signIn } from 'next-auth/react';
 import {
@@ -36,6 +36,8 @@ export default function SignupForm() {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [successMessage, setSuccessMessage] = useState(null);
+  const [countdown, setCountdown] = useState(5);
   const router = useRouter();
 
   const handleChange = (e) => {
@@ -49,6 +51,7 @@ export default function SignupForm() {
     e.preventDefault();
     setLoading(true);
     setError(null);
+    setSuccessMessage(null);
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     const passwordRegex = /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d).{8,}$/;
@@ -78,9 +81,22 @@ export default function SignupForm() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(form),
       });
-      console.log(res)
-      
+
       if (!res.ok) throw new Error('Failed to sign up');
+
+      // Registration successful
+      setSuccessMessage('Registration Successful. Redirecting to login in ');
+      setCountdown(5);
+      // Start countdown
+      const countdownInterval = setInterval(() => {
+        setCountdown((prev) => {
+          if (prev === 1) {
+            clearInterval(countdownInterval);
+            router.push('/login');
+          }
+          return prev - 1;
+        });
+      }, 1000);
 
     } catch (err) {
       setError(err.message);
@@ -95,7 +111,6 @@ export default function SignupForm() {
       flexDirection="row"
       h="auto"
       alignItems="center"
-   
     >
       {/** form */}
       <Box w={['100%', '100%', '500px', '500px']} height="auto" p="20px">
@@ -110,9 +125,7 @@ export default function SignupForm() {
             flexDirection="column"
             alignItems="center"
           >
-            <Image alt="logo" width="100px" height="50px" />
-
-          
+            <Image display='none' alt="logo" width="100px" height="50px" />
 
             <HStack display="flex" flexDirection="row" spacing="20px">
               <Button>
@@ -120,11 +133,7 @@ export default function SignupForm() {
                   <FcGoogle /> <Text>Google</Text>
                 </HStack>
               </Button>
-              <Button>
-                <HStack spacing={1}>
-                  <BsLinkedin color="#02BA7E" /> <Text>LinkedIn</Text>
-                </HStack>
-              </Button>
+              
             </HStack>
 
             <Box position="relative" padding="10px">
@@ -135,14 +144,19 @@ export default function SignupForm() {
         </Box>
         <Box w="100%">
           <Box w="full" px="20px" h="auto">
-
             <List spacing={3}>
-            {error && (
-        <Alert status="error" mt="4">
-          <AlertIcon />
-          {error}
-        </Alert>
-      )}
+              {error && (
+                <Alert status="error" mt="4">
+                  <AlertIcon />
+                  {error}
+                </Alert>
+              )}
+              {successMessage && (
+                <Alert status="success" mt="4">
+                  <AlertIcon />
+                  {successMessage} {countdown}
+                </Alert>
+              )}
               <ListItem>
                 <FormControl>
                   <FormLabel>First Name</FormLabel>
@@ -219,7 +233,7 @@ export default function SignupForm() {
       <Center
         w="full"
         height="100vh"
-        bg="yellow"
+        bg="white"
         display={['none', 'none', 'flex', 'flex']}
         p="20px"
         justifyContent="center"
@@ -227,7 +241,6 @@ export default function SignupForm() {
       >
         <Image alt="side logo" src="/authlogo.svg" width={500} height={300} />
       </Center>
-   
     </Box>
   );
 }
