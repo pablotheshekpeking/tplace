@@ -79,6 +79,7 @@ export default function SignupForm() {
         body: JSON.stringify(form),
       });
       console.log(res)
+      
       if (!res.ok) throw new Error('Failed to sign up');
 
     } catch (err) {
