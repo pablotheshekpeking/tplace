@@ -22,25 +22,17 @@ import { MdOutlineVerified } from "react-icons/md";
 import { FaRegHeart,FaHeart } from "react-icons/fa";
 
 import axios from "axios";
+import useProducts from "@/app/hooks/useProducts";
 export default function Products() {
-    const [wishlist, setWishlist] = useState([]);
+    
 
-    // Load wishlist from local storage on mount
-    useEffect(() => {
-      const storedWishlist = JSON.parse(localStorage.getItem('wishlist')) || [];
-      setWishlist(storedWishlist);
-    }, []);
   
-    // Save wishlist to local storage whenever it changes
-    useEffect(() => {
-      localStorage.setItem('wishlist', JSON.stringify(wishlist));
-    }, [wishlist]);
   
  
   
     const toast = useToast()
     const { isOpen, onOpen, onClose } = useDisclosure()
-  const [products, setProducts] = useState([]);
+    const { products, isLoading, wishlist, handleWishlistToggle } = useProducts();
   const [loading, setLoading] = useState(true);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [sliderValue, setSliderValue] = useState(5)
@@ -49,20 +41,9 @@ export default function Products() {
   const [successMessage, setSuccessMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const [message, setMessage] = useState('');
-  useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        const response = await fetch("/api/products");
-        const data = await response.json();
-        setProducts(data);
-      } catch (error) {
-        console.error("Failed to fetch products", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchProducts();
-  }, []);
+ 
+
+
   const handleProductClick = (product) => {
     setSelectedProduct(product);
     onOpen()
@@ -99,15 +80,9 @@ export default function Products() {
       setIsSubmitting(false);
     }
   };
-  const handleWishlistToggle = (productId) => {
-    setWishlist((prevWishlist) =>
-      prevWishlist.includes(productId)
-        ? prevWishlist.filter((id) => id !== productId)
-        : [...prevWishlist, productId]
-    );
-  };
 
-  if (loading) {
+
+  if (isLoading) {
     return (
       <Box
         display="flex"

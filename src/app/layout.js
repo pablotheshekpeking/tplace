@@ -2,6 +2,8 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { Providers } from "./provider";
 import NextAuthSessionProvider from "./next-auth-provider";
+import React from "react";
+import { ReactQueryProvider } from "./queryProvider";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -12,22 +14,21 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-
-  <html lang="en">
-    <head>
-          <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover"></meta>
-    </head>
+    <html lang="en">
+      <head>
+        <meta
+          name="viewport"
+          content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover"
+        ></meta>
+      </head>
 
       <body className={inter.className}>
-      <NextAuthSessionProvider>
-      <Providers>
-          {children}
-        </Providers>
-      </NextAuthSessionProvider>
-    
-        </body>
+        <ReactQueryProvider>
+          <NextAuthSessionProvider>
+            <Providers>{children}</Providers>
+          </NextAuthSessionProvider>
+        </ReactQueryProvider>
+      </body>
     </html>
-
-  
   );
 }

@@ -1,34 +1,34 @@
-"use client"
+// hooks/useUser.js
+
+import axios from 'axios';
 import { useState, useEffect } from 'react';
+import {
+    useQuery,
+    useMutation,
+    useQueryClient,
+    QueryClient,
+    QueryClientProvider,
+  } from '@tanstack/react-query'
+
+const fetchUser = async () => {
+  const response = await fetch('/api/user');
+  if (!response.ok) {
+    throw new Error('Failed to fetch user data');
+  }
+  return response.json();
+};
 
 const useUser = () => {
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+    const queryClient = useQueryClient()
+  const queryConfig = {
+    refetchOnWindowFocus: true, // Refetch on window focus
+    refetchInterval: 60000, // Refetch every 60 seconds (optional)
+    refetchIntervalInBackground: true, // Continue refetching in background (optional)
+  };
+  const { data: user, isLoading, error } = useQuery({ queryKey: ['user'], queryFn: fetchUser });
 
-  useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        setLoading(true);
-        const response = await fetch('/api/user');
-        const data = await response.json();
 
-        if (response.ok) {
-          setUser(data);
-        } else {
-          setError(data.error || 'Failed to fetch user data');
-        }
-      } catch (err) {
-        setError('Failed to fetch user data');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchUser();
-  }, []);
-
-  return { user, loading, error };
+  return { user, loading: isLoading, error };
 };
 
 export default useUser;
