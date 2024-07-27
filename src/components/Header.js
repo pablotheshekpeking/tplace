@@ -17,13 +17,15 @@ import {
   IconButton,
   useColorModeValue,
   Input,
+  Text
 } from "@chakra-ui/react";
 import Image from "next/image";
 import { useRef } from "react";
 import { TiThMenuOutline } from "react-icons/ti";
 import { FaCircleDollarToSlot } from "react-icons/fa6";
 import useUser from "@/app/hooks/useUser";
-
+import Link from "next/link";
+import { MdOutlineAddBox } from "react-icons/md";
 function StatsCard(props) {
   const { title, stat, icon } = props;
   return (
@@ -95,7 +97,19 @@ export default function Header() {
             />
           </Box>
           <DrawerHeader>Vendor</DrawerHeader>
-
+<Link href={'/vendor/create-product'}>
+<Box
+px={'20px'}
+w={'full'}
+bg={'grey.100'}
+>
+  <Button
+  rightIcon={<MdOutlineAddBox />}
+  >
+    Create Product
+  </Button>
+</Box>
+</Link>
           <DrawerBody></DrawerBody>
 
           <DrawerFooter>

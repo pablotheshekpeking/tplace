@@ -1,6 +1,6 @@
-'use client'
+'use client';
 
-import { useState } from 'react'
+import { useState } from 'react';
 import {
   Progress,
   Box,
@@ -15,7 +15,11 @@ import {
   SimpleGrid,
   Textarea,
   useToast,
-} from '@chakra-ui/react'
+} from '@chakra-ui/react';
+import { useEdgeStore } from '@/app/edgeProvider';
+import { SingleImageDropzone } from '@/components/singleImage';
+import { MultiImageDropzone } from '@/components/multiImage';
+import Bottom from '@/components/BottomNav';
 
 // Define initial form data
 const initialFormData = {
@@ -24,10 +28,8 @@ const initialFormData = {
   price: '',
   mainPhoto: '',
   category: '',
-  state: '',
-  city: '',
   photos: [],
-}
+};
 
 const Form1 = ({ formData, handleChange }) => {
   return (
@@ -70,102 +72,80 @@ const Form1 = ({ formData, handleChange }) => {
         />
       </FormControl>
     </>
-  )
-}
+  );
+};
 
 const Form2 = ({ formData, handleChange }) => {
-  return (
-    <>
-      <Heading w="100%" textAlign={'center'} fontWeight="normal" mb="2%">
-        Product Details
-      </Heading>
-      <FormControl mb="2%">
-        <FormLabel htmlFor="mainPhoto" fontWeight={'normal'}>
-          Main Photo URL
-        </FormLabel>
-        <Input
-          id="mainPhoto"
-          placeholder="Main Photo URL"
-          value={formData.mainPhoto}
-          onChange={handleChange}
-        />
-      </FormControl>
-      <FormControl mb="2%">
-        <FormLabel htmlFor="category" fontWeight={'normal'}>
-          Category
-        </FormLabel>
-        <Input
-          id="category"
-          placeholder="Category"
-          value={formData.category}
-          onChange={handleChange}
-        />
-      </FormControl>
-      <FormControl mb="2%">
-        <FormLabel htmlFor="state" fontWeight={'normal'}>
-          State
-        </FormLabel>
-        <Input
-          id="state"
-          placeholder="State"
-          value={formData.state}
-          onChange={handleChange}
-        />
-      </FormControl>
-      <FormControl mb="2%">
-        <FormLabel htmlFor="city" fontWeight={'normal'}>
-          City
-        </FormLabel>
-        <Input
-          id="city"
-          placeholder="City"
-          value={formData.city}
-          onChange={handleChange}
-        />
-      </FormControl>
-    </>
-  )
-}
+  return <></>;
+};
 
 const Form3 = ({ formData, handleChange }) => {
-  return (
-    <>
-      <Heading w="100%" textAlign={'center'} fontWeight="normal">
-        Additional Photos
-      </Heading>
-      <SimpleGrid columns={1} spacing={6}>
-        <FormControl mb="2%">
-          <FormLabel htmlFor="photos" fontWeight={'normal'}>
-            Photos (comma-separated URLs)
-          </FormLabel>
-          <Textarea
-            id="photos"
-            placeholder="Photo URLs"
-            value={formData.photos}
-            onChange={handleChange}
-          />
-        </FormControl>
-      </SimpleGrid>
-    </>
-  )
-}
+  return <></>;
+};
 
 export default function Create() {
-  const toast = useToast()
-  const [step, setStep] = useState(1)
-  const [progress, setProgress] = useState(33.33)
-  const [formData, setFormData] = useState(initialFormData)
-
+  const toast = useToast();
+  const [step, setStep] = useState(1);
+  const [progress, setProgress] = useState(33.33);
+  const [formData, setFormData] = useState(initialFormData);
+  const [file, setFile] = useState();
+  const [fileStates, setFileStates] = useState([]);
+  const { edgestore } = useEdgeStore();
+const [loading, isLoading] = useState(false) 
   const handleChange = (e) => {
-    const { id, value } = e.target
+    const { id, value } = e.target;
     setFormData((prevState) => ({
       ...prevState,
       [id]: value,
-    }))
+    }));
+  };
+
+
+  function updateFileProgress(key, progress) {
+    setFileStates((fileStates) => {
+      const newFileStates = structuredClone(fileStates);
+      const fileState = newFileStates.find(
+        (fileState) => fileState.key === key,
+      );
+      if (fileState) {
+        fileState.progress = progress;
+      }
+      return newFileStates;
+    });
   }
 
   const handleSubmit = async () => {
+    isLoading(true)
     try {
+      // Upload main photo
+      const mainPhotoRes = await edgestore.publicFiles.upload({
+        file,
+        onProgressChange: (progress) => {
+          // you can use this to show a progress bar
+          console.log(progress);
+        },
+      });
+
+      // Upload additional photos
+      const uploadedPhotos = await Promise.all(
+        fileStates.map(async (fileState) => {
+          const res = await edgestore.publicFiles.upload({
+            file: fileState.file,
+            onProgressChange: async (progress) => {
+              updateFileProgress(fileState.key, progress);
+              if (progress === 100) {
+                // wait 1 second to set it to complete
+                // so that the user can see the progress bar at 100%
+                await new Promise((resolve) => setTimeout(resolve, 1000));
+                updateFileProgress(fileState.key, 'COMPLETE');
+              }
+            },
+          });
+          return res.url;
+        })
+      );
+
+      // Submit the form
       const response = await fetch('/api/products', {
         method: 'POST',
         headers: {
@@ -173,54 +153,134 @@ export default function Create() {
         },
         body: JSON.stringify({
           ...formData,
+          mainPhoto: mainPhotoRes.url,
           price: parseFloat(formData.price),
-          photos: formData.photos.split(','),
+          photos: uploadedPhotos,
         }),
-      })
+      });
+
       if (!response.ok) {
-        throw new Error('Failed to create product')
+        throw new Error('Failed to create product');
       }
+
       toast({
+        position:'top-right',
         title: 'Product created.',
         description: "We've created your product.",
         status: 'success',
         duration: 3000,
         isClosable: true,
-      })
-      setFormData(initialFormData) // Reset form data after successful submission
+      });
+      setFormData(initialFormData); // Reset form data after successful submission
+      setFile(null);
+      setFileStates([]);
+      isLoading(false)
     } catch (error) {
       toast({
+        position:'top-right',
         title: 'Error',
         description: error.message,
         status: 'error',
         duration: 3000,
         isClosable: true,
-      })
+      });
     }
-  }
+  };
 
   return (
     <>
       <Box
-        borderWidth="1px"
+
+mt={'200px'}
         rounded="lg"
-        shadow="1px 1px 3px rgba(0,0,0,0.3)"
         maxWidth={800}
         p={6}
         m="10px auto"
         as="form">
-        <Progress colorScheme={'orange'} hasStripe value={progress} mb="5%" mx="5%" isAnimated></Progress>
-        {step === 1 ? <Form1 formData={formData} handleChange={handleChange} /> : step === 2 ? <Form2 formData={formData} handleChange={handleChange} /> : <Form3 formData={formData} handleChange={handleChange} />}
+          <Box
+        w={'full'}
+        h={'50px'}
+        >
+
+        </Box>
+        <Progress
+          colorScheme={'orange'}
+          hasStripe
+          value={progress}
+          mb="5%"
+          mx="5%"
+          isAnimated
+        ></Progress>
+        {step === 1 ? (
+          <Form1 formData={formData} handleChange={handleChange} />
+        ) : step === 2 ? (
+          <>
+            <Heading w="100%" textAlign={'center'} fontWeight="normal" mb="2%">
+              Product Details
+            </Heading>
+            <FormControl
+              mb="2%"
+              h={'auto'}
+              justifyContent={'center'}
+              alignItems={'center'}
+              display={'flex'}
+              flexDirection={'column'}>
+              <FormLabel htmlFor="mainPhoto" fontWeight={'normal'}>
+                Main Photo URL
+              </FormLabel>
+              <SingleImageDropzone
+                width={200}
+                height={200}
+                value={file}
+                onChange={(file) => {
+                  setFile(file);
+                }}
+              />
+            </FormControl>
+            <FormControl mb="2%">
+              <FormLabel htmlFor="category" fontWeight={'normal'}>
+                Category
+              </FormLabel>
+              <Input
+                id="category"
+                placeholder="Category"
+                value={formData.category}
+                onChange={handleChange}
+              />
+            </FormControl>
+          </>
+        ) : (
+          <>
+            <Heading w="100%" textAlign={'center'} fontWeight="normal">
+              Additional Photos
+            </Heading>
+            <SimpleGrid columns={1} spacing={6}>
+              <FormControl mb="2%">
+                <FormLabel htmlFor="photos" fontWeight={'normal'}>
+                  Photos
+                </FormLabel>
+                <MultiImageDropzone
+                  value={fileStates}
+                  dropzoneOptions={{
+                    maxFiles: 3,
+                  }}
+                  onChange={(files) => {
+                    setFileStates(files);
+                  }}
+                />
+              </FormControl>
+            </SimpleGrid>
+          </>
+        )}
         <ButtonGroup mt="5%" w="100%">
           <Flex w="100%" justifyContent="space-between">
             <Flex>
               <Button
                 onClick={() => {
-                  setStep(step - 1)
-                  setProgress(progress - 33.33)
+                  setStep(step - 1);
+                  setProgress(progress - 33.33);
                 }}
                 isDisabled={step === 1}
-         
                 colorScheme={'orange'}
                 w="7rem"
                 mr="5%">
@@ -230,8 +290,8 @@ export default function Create() {
                 w="7rem"
                 isDisabled={step === 3}
                 onClick={() => {
-                  setStep(step + 1)
-                  setProgress(progress + 33.33)
+                  setStep(step + 1);
+                  setProgress(progress + 33.33);
                 }}
                 colorScheme={'orange'}
                 variant="outline">
@@ -240,6 +300,7 @@ export default function Create() {
             </Flex>
             {step === 3 ? (
               <Button
+              isLoading={loading}
                 w="7rem"
                 colorScheme={'orange'}
                 variant="solid"
@@ -249,7 +310,8 @@ export default function Create() {
             ) : null}
           </Flex>
         </ButtonGroup>
+        <Bottom/>
       </Box>
     </>
-  )
+  );
 }

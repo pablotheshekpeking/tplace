@@ -3,8 +3,14 @@ import Create from "./create";
 import { IoChevronBackSharp } from "react-icons/io5";
 export default function Page(){
     return(
-        <Box h={'100vh'} w={'100%'} maxW={'7xl'} m={'auto'} bg={'white'}>
+        <Box position={'relative'} pb={'100px'} h={'auto'} w={'100%'} maxW={'7xl'} m={'auto'} bg={'white'}>
 <Box
+position={
+    'fixed'
+}
+
+zIndex={'999'}
+left={0}
 px={'10px'}
 w={'full'}
 h={'50px'}

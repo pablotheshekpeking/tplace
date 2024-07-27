@@ -4,6 +4,7 @@ import { Providers } from "./provider";
 import NextAuthSessionProvider from "./next-auth-provider";
 import React from "react";
 import { ReactQueryProvider } from "./queryProvider";
+import { EdgeStoreProvider } from "./edgeProvider";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -23,11 +24,16 @@ export default function RootLayout({ children }) {
       </head>
 
       <body className={inter.className}>
+      <NextAuthSessionProvider>
         <ReactQueryProvider>
-          <NextAuthSessionProvider>
-            <Providers>{children}</Providers>
-          </NextAuthSessionProvider>
+  
+            <EdgeStoreProvider>
+                 <Providers>{children}</Providers>
+            </EdgeStoreProvider>
+         
+ 
         </ReactQueryProvider>
+        </NextAuthSessionProvider>
       </body>
     </html>
   );
