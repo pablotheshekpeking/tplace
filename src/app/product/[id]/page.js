@@ -80,8 +80,8 @@ const ProductList = ({ params }) => {
 
       <Box
         w={'full'}
-        h={'100vh'}
         px={'24px'}
+        h={'100vh'}
         display={'flex'}
         flexDirection={'column'}
         alignItems={'center'}
@@ -96,10 +96,19 @@ const ProductList = ({ params }) => {
             "::-webkit-scrollbar": {
               display: "none",
             },
-          }} display={'flex'} maxWidth={'7xl'} w={'full'} h={'auto'} p={'20px'} justifyContent={'space-between'} overflowX={'scroll'}
+          }} display={'flex'} w={'full'} h={'auto'} justifyContent={'space-between'} overflowX={'scroll'}
         >
-          <Image src={product.mainPhoto} width={300} height={200} style={{borderRadius: '12px'}} />
-          <Image src={product.photos} width={300} height={200} style={{borderRadius: '12px'}} />
+          <Image src={product.mainPhoto} width={300} height={300} style={{ borderRadius: '12px' }} />
+          {product.photos.map((photo, index) => (
+            <Image
+              key={index}
+              src={photo}
+              width={300}
+              height={300}
+              alt={`Product photo ${index + 1}`} // Add an alt attribute for accessibility
+              style={{ borderRadius: '12px' }}
+            />
+          ))}
         </Box>
 
         {/** user name and heart section */}
@@ -190,10 +199,10 @@ const ProductList = ({ params }) => {
 
         {/** description */}
         <Box
-        w={'full'}
-        maxW={'7xl'}
-        display={'flex'}
-        flexDirection={'column'}
+          w={'full'}
+          maxW={'7xl'}
+          display={'flex'}
+          flexDirection={'column'}
         >
           <Text fontWeight={700} fontSize={'18px'}>Description</Text>
           <Text fontSize={'12px'}>{product.description}</Text>
@@ -201,23 +210,23 @@ const ProductList = ({ params }) => {
 
         {/** map */}
         <Box
-        w={'full'}
-        maxW={'7xl'}
-        display={'flex'}
-        flexDirection={'column'}
-        gap={'12px'}
+          w={'full'}
+          maxW={'7xl'}
+          display={'flex'}
+          flexDirection={'column'}
+          gap={'12px'}
         >
           <Box
-          display={'flex'}
-          alignItems={'center'}
+            display={'flex'}
+            alignItems={'center'}
           >
             <IoLocation fill="orange" /><Text fontWeight={700} fontSize={'12px'}>Main Location</Text>
           </Box>
           <Box
-          w={'full'}
-          h={'200px'}
-          bg={'grey'}
-          borderRadius={'12px'}
+            w={'full'}
+            h={'200px'}
+            bg={'grey'}
+            borderRadius={'12px'}
           ></Box>
         </Box>
 
