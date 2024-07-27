@@ -2,13 +2,33 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
-import { Box, Text, Button } from "@chakra-ui/react";
 import { IoChevronBackSharp, IoLocation } from "react-icons/io5";
 import Image from "next/image";
 import useUser from "@/app/hooks/useUser";
 import { FaHeart, FaClock, FaStar } from "react-icons/fa";
-import { Avatar, AvatarBadge, AvatarGroup } from '@chakra-ui/react'
+import { Avatar } from '@chakra-ui/react'
 import Bottom from "@/components/BottomNav";
+import { MdCall, MdRemoveRedEye } from "react-icons/md";
+import { BsCashCoin } from "react-icons/bs";
+import {
+  Box, SimpleGrid, Spinner, Text, Button, Tag, useDisclosure,
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalFooter,
+  ModalBody,
+  ModalCloseButton,
+  Slider,
+  SliderTrack,
+  SliderFilledTrack,
+  SliderThumb,
+  SliderMark,
+  Textarea,
+  useToast
+} from "@chakra-ui/react";
+import { useState } from "react";
+import axios from "axios";
 
 const fetchProduct = async (id) => {
   // Convert the id to an integer if it's a string
@@ -32,7 +52,14 @@ const fetchProduct = async (id) => {
 
 
 const ProductList = ({ params }) => {
+  const { isOpen, onOpen, onClose } = useDisclosure();
   const router = useRouter();
+  const [sliderValue, setSliderValue] = useState(5)
+  const [showTooltip, setShowTooltip] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
+  const [message, setMessage] = useState('');
   const handleBackClick = () => {
     router.back();
   };
@@ -53,6 +80,39 @@ const ProductList = ({ params }) => {
 
   if (!product) return <div>No product found.</div>;
 
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    setIsSubmitting(true);
+    setSuccessMessage('');
+    setErrorMessage('');
+
+    try {
+      const response = await axios.post('@api/offers', {
+        amount: sliderValue,
+        message,
+        productId: selectedProduct.id,
+      });
+
+      if (response.status === 201) {
+        onClose()
+        setSuccessMessage('Offer created successfully!');
+        toast({
+          title: 'Offer created successfully!',
+          status: 'success',
+          position: 'top-right',
+          duration: 9000,
+          isClosable: true,
+        })
+
+      }
+    } catch (error) {
+      setErrorMessage('Failed to create offer.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  
   return (
     <Box
       w={'full'}
@@ -80,8 +140,8 @@ const ProductList = ({ params }) => {
 
       <Box
         w={'full'}
+        h={'auto'}
         px={'24px'}
-        h={'100vh'}
         display={'flex'}
         flexDirection={'column'}
         alignItems={'center'}
@@ -96,7 +156,7 @@ const ProductList = ({ params }) => {
             "::-webkit-scrollbar": {
               display: "none",
             },
-          }} display={'flex'} w={'full'} h={'auto'} justifyContent={'space-between'} overflowX={'scroll'}
+          }} display={'flex'} w={'full'} h={300} justifyContent={'space-between'} overflowX={'scroll'}
         >
           <Image src={product.mainPhoto} width={300} height={300} style={{ borderRadius: '12px' }} />
           {product.photos.map((photo, index) => (
@@ -206,6 +266,71 @@ const ProductList = ({ params }) => {
         >
           <Text fontWeight={700} fontSize={'18px'}>Description</Text>
           <Text fontSize={'12px'}>{product.description}</Text>
+        </Box>
+
+        {/** buttons */}
+        <Box py={'10px'} w={'full'} h={'auto'} display={'flex'} justifyContent={'space-between'}>
+          <Button h={'35px'} fontSize={'12px'} leftIcon={<MdRemoveRedEye />}>
+            View Contact
+          </Button>
+          <Button onClick={onOpen} h={'35px'} fontSize={'12px'} color={'white'} colorScheme={'orange'} leftIcon={<BsCashCoin />}>
+            Make offer
+          </Button>
+
+          {isOpen && (<Modal isOpen={isOpen} onClose={onClose} w={'80%'} autoFocus={false} allowPinchZoom={false}>
+            <ModalOverlay />
+            <ModalContent w={'80%'}>
+              <ModalHeader>Make offer</ModalHeader>
+              <ModalCloseButton />
+              <form onSubmit={handleSubmit}>
+                <ModalBody>
+                  {successMessage && <Text color='green.500' mt='4'>{successMessage}</Text>}
+                  {errorMessage && <Text color='red.500' mt='4'>{errorMessage}</Text>}
+                  <Text m={'auto'} w={'150px'} textAlign={'center'}>
+                    <Text fontSize={'20px'} fontWeight={'500'}>&#8358;{sliderValue}
+                    </Text>
+                    Offer
+                  </Text>
+                  <Slider
+
+                    min={0}
+                    max={isOpen.price}
+                    colorScheme='teal'
+                    onChange={(v) => setSliderValue(v)}
+                    onMouseEnter={() => setShowTooltip(true)}
+                    onMouseLeave={() => setShowTooltip(false)}
+                    aria-label='slider-ex-4' defaultValue={30}>
+                    <SliderTrack bg='red.100'>
+                      <SliderFilledTrack bg='tomato' />
+                    </SliderTrack>
+                    <SliderThumb boxSize={6}>
+                      <Box color='tomato' as={BsCashCoin} />
+                    </SliderThumb>
+                  </Slider>
+                  <Text textAlign={'center'}>
+                    Asking Price: &#8358;{isOpen.price}
+                  </Text>
+
+                  <Textarea
+                    fontSize={'16px'}
+                    value={message}
+                    onChange={(e) => setMessage(e.target.value)}
+                    my={'10px'}
+                    placeholder='Offer Message'
+                    size='sm'
+                    resize={'none'}
+                  />
+                </ModalBody>
+
+                <ModalFooter>
+                  <Button colorScheme='blue' mr={3} onClick={onClose}>
+                    Close
+                  </Button>
+                  <Button type='submit' isLoading={isSubmitting} bg="#f68950" color={'white'} variant='solid'>Make Offer</Button>
+                </ModalFooter>
+              </form>
+            </ModalContent>
+          </Modal>)}
         </Box>
 
         {/** map */}
