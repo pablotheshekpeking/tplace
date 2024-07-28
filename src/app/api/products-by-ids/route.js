@@ -22,6 +22,9 @@ export const POST = async (req) => {
       where: {
         id: id, // Use the unique id to fetch a single product
       },
+      include:{
+        user: true
+      }
     });
     
     if (!product) {
