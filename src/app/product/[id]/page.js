@@ -147,6 +147,8 @@ const ProductList = ({ params }) => {
         alignItems={'center'}
         gap={'24px'}
         pt={'40px'}
+        overflowY={'scroll'}
+        mb={20}
       >
         {/** carousel */}
         <Box
