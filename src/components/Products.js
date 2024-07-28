@@ -121,11 +121,12 @@ export default function Products() {
        
             key={product.id}
         position={'relative'}
-            height="auto"
+     
+            height={["300px","400px","500px","500px"]}
             display="flex"
             flexDirection="column"
             alignItems="center"
-            justifyContent="center"
+            justifyContent="space-between"
           
             borderRadius={"10px"}
           >
