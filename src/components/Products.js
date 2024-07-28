@@ -22,6 +22,7 @@ import { FaUserCircle } from "react-icons/fa";
 import { MdOutlineVerified } from "react-icons/md";
 import { FaRegHeart, FaHeart } from "react-icons/fa";
 import { useRouter } from 'next/navigation';
+import Link from "next/link";
 
 import axios from "axios";
 import useProducts from "@/app/hooks/useProducts";
@@ -46,10 +47,7 @@ export default function Products() {
 
   const router = useRouter();
 
-  // Navigate to product detail page
-  const handleProductClickLink = (product) => {
-    router.push(`/product/${product.id}`);
-  };
+
 
 
 
@@ -127,7 +125,7 @@ export default function Products() {
             const isProductInWishlist = wishlist.some(item => item.id === product.id);
             return (
               <Box
-                
+
                 key={product.id}
                 position={'relative'}
                 height="auto"
@@ -144,14 +142,14 @@ export default function Products() {
                 >
                   {wishlist.includes(product.id) ? <FaHeart /> : <FaRegHeart />}
                 </Box>
-                <Image
-                  src={product.mainPhoto}
-                  alt={product.title}
-                  width={500}
-                  height={300}
-                  style={{ borderRadius: "10px" }}
-                  onClick={() => handleProductClickLink(product)}
-                />
+                <Link href={`/product/${product.id}`}>
+                  <Image
+                    src={product.mainPhoto}
+                    alt={product.title}
+                    width={500}
+                    height={300}
+                    style={{ borderRadius: "10px" }}
+                  /></Link>
                 <Box w={"full"} h={"auto"}>
                   <Text
                     casing={'capitalize'}
